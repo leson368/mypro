@@ -32,8 +32,10 @@
                     password
                 },
                 success: function(res) {
-                    console.log(res);
-                    window.location.href = './index.html';
+                    alert(res.msg);
+                    if(res.success) {
+                        window.location.href = './index.html';
+                    }
                 }
             })
         }

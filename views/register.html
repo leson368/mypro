@@ -29,11 +29,11 @@
             var password = document.querySelector('input[name=password]').value;
             var sure_password = document.querySelector('input[name=sure_password]').value;
 
-            if(!name) {
+            if (!name) {
                 alert('请输入账号名');
-            } else if(!password) {
+            } else if (!password) {
                 alert('请输入密码');
-            } else if(password !== sure_password) {
+            } else if (password !== sure_password) {
                 alert('两次输入的密码不同')
             } else {
                 request({
@@ -43,9 +43,14 @@
                         name,
                         password
                     },
-                    success: function(res) {
-                        console.log(res);
-                        // window.location.href = './login.html';
+                    success: function (res) {
+                        alert(res.msg);
+                        if (res.success) {
+                            window.location.href = './login.html';
+                        }
+                    },
+                    fail: function (res) {
+                        alert('服务器异常')
                     }
                 })
             }

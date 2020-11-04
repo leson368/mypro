@@ -6,6 +6,14 @@ const websocket = require('koa-websocket');
 
 const addControllers = require('./router');
 
+const { User } = require('./mapping');
+
+
+// 查询
+User.findAll().then(users=>{
+    console.log('All users:',JSON.stringify(users,null,4));
+})
+
 const app = websocket(new Koa());
 
 (() => {
@@ -42,11 +50,27 @@ const app = websocket(new Koa());
     })
 })();
 
+app.use(async (ctx, next) => {
+    try {
+       await next(); 
+    } catch(err) {
+        // console.log(err)
+        // console.log(ctx.status)
+        // console.log(ctx.response.status)
+        // ctx.response.status = 500;
+        // ctx.body = err.errors;
+        ctx.status = 500;
+        ctx.body = err;
+    }
+})
+
+
 addControllers(router);
 
 app.use(bodyParser());
 app.use(router.routes());
 app.use(KoaStatic('views'));
+
 
 
 app.listen(3000, () => {

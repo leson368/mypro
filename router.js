@@ -5,11 +5,9 @@ function addMapping(router, mapping) {
         if (url.startsWith('GET ')) {
             var path = url.substring(4);
             router.get('/api' + path, mapping[url]);
-            console.log(`register URL mapping: GET ${path}`);
         } else if (url.startsWith('POST ')) {
             var path = url.substring(5);
             router.post('/api' + path, mapping[url]);
-            console.log(`register URL mapping: POST ${path}`);
         } else {
             console.log(`invalid URL: ${url}`);
         }
