@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="./js/api.js"></script>
+    <script src="./js/util.js"></script>
+    <script src="./js/linksocket.js"></script>
+    <title>Home</title>
+
+    <style>
+        .list {
+            padding: 20px;
+        }
+
+        .list li {
+            padding: 10px;
+        }
+
+        .list li:active {
+            background: #f8f8f8;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="inp">
+            <input type="text" name="name" placeholder="添加好友">
+            <button onclick="add()">添加</button>
+        </div>
+
+        <ul class="list"></ul>
+    </div>
+
+    <script>
+        (function () {
+            var userid = getCookie('userid');
+            linkWebsocket({
+                onmessage: function (message) {
+                    var data = JSON.parse(message.data);
+                    if (data.push) {
+                        var sure = confirm(data.from.name + '请求加您为好友');
+                        if (sure) {
+                            request({
+                                url: '/api/access_friend',
+                                method: 'POST',
+                                body: {
+                                    userid: data.from.userid
+                                },
+                                success: function(res) {
+                                    if(res.success) {
+                                        alert(res.msg)
+                                    }
+                                }
+                            })
+                        } else {
+                            console.log('不同意')
+                        }
+                    } else if(data.access) {
+                        alert(data.from.name)
+                    }
+
+                },
+
+                onclose: function () {
+                    console.log('websocket closed');
+                },
+
+                userid
+            })
+
+            request({
+                url: '/api/friendList',
+                method: 'GET',
+                success: function (res) {
+                    if (res.success) {
+                        var list = res.data.rows;
+                        var len = list.length;
+                        if (len > 0) {
+                            var html = '<ul>';
+                            for (let i = 0; i < len; i++) {
+                                html += '<li class="item" data-id="' + list[i].userid + '">' + list[i].name + '<span class="delete">删除</span></li>';
+                            }
+                            html += '</ul>';
+
+                            document.querySelector('.list').innerHTML = html;
+                        }
+                    } 
+                }
+            });
+
+            document.addEventListener('click', function (e) {
+                console.log(e.target)
+            })
+        })()
+        // webSocket.onclose = onclose;
+
+        function add() {
+            var name = document.querySelector('input[name=name]').value;
+            request({
+                url: '/api/addFriend',
+                method: 'POST',
+                body: {
+                    name
+                },
+                success: function (res) {
+                    if (res.success) {
+                        console.log(res)
+                    } else {
+                        alert(res.msg)
+                    }
+                }
+            })
+        }
+
+    </script>
+</body>
+
+</html>

@@ -8,6 +8,8 @@ const addControllers = require('./router');
 
 const { User } = require('./mapping');
 
+const { startSocket } = require('./websocket');
+
 
 // 查询
 User.findAll().then(users=>{
@@ -16,49 +18,13 @@ User.findAll().then(users=>{
 
 const app = websocket(new Koa());
 
-(() => {
-    let ctxs = [];
-
-    app.ws.use(ctx => {
-        ctx.websocket.send(JSON.stringify({content: '连接成功'}));
-    
-        ctxs.push(ctx);
-        ctx.websocket.on("message", message => {
-            for(let i = 0; i < ctxs.length; i++) {
-                if (ctx == ctxs[i]) {
-                    console.log(message)
-                    ctxs[i].websocket.send(message);
-                    continue;
-                }
-    
-                
-                let msg = JSON.parse(message);
-                let data = {
-                    from: msg.from,
-                    content: msg.content
-                }
-    
-                ctxs[i].websocket.send(JSON.stringify(data));
-            }
-        })
-    
-        ctx.websocket.on("close", () => {
-            console.log('close');
-            let index = ctxs.indexOf(ctx);
-            ctxs.splice(index, 1);
-        })
-    })
-})();
+startSocket(app);
 
 app.use(async (ctx, next) => {
     try {
        await next(); 
     } catch(err) {
-        // console.log(err)
-        // console.log(ctx.status)
-        // console.log(ctx.response.status)
-        // ctx.response.status = 500;
-        // ctx.body = err.errors;
+        console.log(err)
         ctx.status = 500;
         ctx.body = err;
     }

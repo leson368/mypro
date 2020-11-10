@@ -17,11 +17,11 @@ function request({ method = 'GET', url, body, success, fail}) {
             if(httpRequest.status >= 200 && httpRequest.status <= 300) {
                 var json = httpRequest.responseText;//获取到json字符串，还需解析
                 var data = JSON.parse(json)
-                success(data);
+                if(success) success(data);
             } else {
                 var json = httpRequest.responseText;//获取到json字符串，还需解析
-                var data = JSON.parse(json)
-                fail(data);
+                var data = JSON.parse(json);
+                if(fail)  fail(data);
             }
             
         }

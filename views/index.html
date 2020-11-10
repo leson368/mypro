@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="./index.css">
+    <script src="./js/linksocket.js"></script>
     <title>sendMessage</title>
 </head>
+
 <body>
     <div class="container">
-        <form action="sendMessage" method="post">
-            <input type="text" name="message">
-            <input type="submit" value="Submit">
-        </form>
+        <p class="friend"></p>
         <div>
             <input type="text" class="id">
             <button onclick="onClick()">点击</button>
@@ -31,43 +31,37 @@
             id = document.getElementsByClassName('id')[0].value;
         }
 
-        function createWebsocket(url) {
-            if(window.WebSocket) return new WebSocket(url);
-            if(window.MozWebSocket) return new MozWebSocket(url);
-            return false;
-        }
-
         function createNode(data, status) {
             const node = document.createElement('div');
             node.innerHTML = '<span>' + data.from + '：' + data.content + '</span>';
-            if(status) {
+            if (status) {
                 const span = document.createElement('span');
                 span.classList.add('mysend' + mysend);
                 span.classList.add('mysend');
                 span.innerHTML = status;
                 node.appendChild(span);
-                mysend ++;
+                mysend++;
             }
             document.getElementsByClassName('text')[0].appendChild(node);
         }
 
-        const webSocket = createWebsocket("ws://localhost:3000");
+        // linkWebsocket({
+        //     onmessage: function (message) {
+        //         console.log('服务端：' + message.data);
+        //         let msg = JSON.parse(message.data);
 
-        webSocket.onmessage = function (message) {
-            console.log('服务端：' + message.data);
-            let msg = JSON.parse(message.data);
+        //         if (!msg.from) return;
+        //         if (msg.from === id) {
+        //             document.getElementsByClassName(msg.id)[0].innerHTML = '已发送';
+        //             return;
+        //         }
+        //         createNode(msg);
+        //     },
 
-            if(!msg.from) return;
-            if(msg.from === id) {
-                document.getElementsByClassName(msg.id)[0].innerHTML = '已发送';
-                return;
-            }
-            createNode(msg);
-        }
-
-        webSocket.onclose = function() {
-            console.log('关闭连接');
-        }
+        //     onclose: function () {
+        //         console.log('关闭连接');
+        //     }
+        // });
 
         const dom = document.getElementsByClassName('btn')[0];
         let mysend = 0;
@@ -88,4 +82,5 @@
         })
     </script>
 </body>
+
 </html>
