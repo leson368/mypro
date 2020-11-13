@@ -65,7 +65,15 @@ const UserRelation = sequelize.define('user',{
     timestamps: false
 });
 
+
+// UserRelation.belongsTo(User, {
+//     as: 'friends', 
+//     foreignKey: 'userid', 
+//     // targetKey: 'classId'
+// });
+
 module.exports = {
+    sequelize,
     User,
     UserRelation
 }

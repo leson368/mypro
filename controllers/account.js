@@ -1,5 +1,6 @@
-const { Op } = require('sequelize');
-const { User, UserRelation } = require('../mapping');
+const { Op, QueryTypes } = require('sequelize');
+const jwt = require('jsonwebtoken');
+const { sequelize, User, UserRelation } = require('../mapping');
 const { success, fail } = require('../status');
 
 const { ctxs, awaitPush } = require('../websocket');
@@ -15,11 +16,28 @@ const login = async ctx => {
     });
     if (user) {
         let now = new Date().getTime();
+
+        // cookie验证
         ctx.cookies.set('userid', user.userid, {
             expires: new Date(now + 1000 * 60 * 60),
             httpOnly: false
         });
-        success(ctx, {});
+
+        // token验证
+        const token = jwt.sign({
+            //token的创建日期
+            time: Date.now(),
+            //token的过期时间
+            timeout: Date.now() + 60000,
+            username: user.name,
+            id: user.userid
+        
+        // token：解析token的标识
+        
+        }, 'token');
+        
+
+        success(ctx, { token });
     } else {
         fail(ctx, { msg: '账号或密码不正确' })
     }
@@ -50,21 +68,10 @@ const register = async ctx => {
 // 获取好友列表
 const friendList = async ctx => {
     const userid = ctx.cookies.get('userid');
-
-    const relation = await UserRelation.findAndCountAll({
-        where: {
-            [Op.or]: [
-                { userid },
-                { friendid: userid }
-            ]
-        }
-    });
-
-    console.log(relation)
-
-    success(ctx, { data: relation });
-
-}
+    let sqlword = 'r.userid as add_from, r.friendid as add_to, r.createtime, r.updatetime, u.userid, u.name,';
+    const friends = await sequelize.query(`select ${sqlword} r.mark_user as mark from user_relation r inner join user u on r.userid=${userid} and r.friendid=u.userid union all select ${sqlword} r.mark_friend as mark from user_relation r inner join user u on r.friendid=${userid} and r.userid=u.userid`, { type: QueryTypes.SELECT });
+    success(ctx, { data: friends });
+};
 
 // 添加好友
 const addFriend = async ctx => {

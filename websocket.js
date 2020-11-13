@@ -7,29 +7,36 @@ let awaitPush = {};
 function startSocket(app) {
 
     app.ws.use(ctx => {
-        let url = ctx.url.substring(1);
-        ctxs[url] = ctx;
+        let from = ctx.url.substring(1);
+        ctxs[from] = ctx;
 
         ctx.websocket.send(JSON.stringify({ message: '连接成功' }));
-        if(awaitPush[url]) {
-            ctx.websocket.send(awaitPush[url]);
-            awaitPush[url] = null;
+        if (awaitPush[from]) {
+            ctx.websocket.send(awaitPush[from]);
+            awaitPush[from] = null;
         }
 
         ctx.websocket.on("message", message => {
-            console.log(url)
             let msg = JSON.parse(message);
+            console.log(msg)
             let data = {
-                from: url,
+                from,
                 content: msg.content
             }
-            ctxs[msg.to].websocket.send(JSON.stringify(data));
+
+            if (ctxs[msg.to]) {
+                ctxs[msg.to].websocket.send(JSON.stringify(data));
+            } else {
+                awaitPush[msg.to] = JSON.stringify(data);
+            }
+
+            ctx.websocket.send(JSON.stringify({ mysend: msg.mysend, sended: true }));
         })
 
         ctx.websocket.on("close", () => {
             console.log('close');
             // let index = ctxs.indexOf(ctx);
-            ctxs[url] = null;
+            ctxs[from] = null;
         })
     });
 

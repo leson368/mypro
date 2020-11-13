@@ -16,10 +16,25 @@
 
         .list li {
             padding: 10px;
+            list-style: none;
         }
 
         .list li:active {
             background: #f8f8f8;
+        }
+
+        .talk {
+            color: aqua;
+            display: inline-block;
+            margin-left: 100px;
+            cursor: pointer;
+        }
+
+        .delete {
+            color: #f25618;
+            display: inline-block;
+            margin-left: 20px;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -37,9 +52,11 @@
     <script>
         (function () {
             var userid = getCookie('userid');
-            linkWebsocket({
+            linkWebsocket(userid, {
                 onmessage: function (message) {
+                    
                     var data = JSON.parse(message.data);
+                    console.log(data)
                     if (data.push) {
                         var sure = confirm(data.from.name + '请求加您为好友');
                         if (sure) {
@@ -49,8 +66,8 @@
                                 body: {
                                     userid: data.from.userid
                                 },
-                                success: function(res) {
-                                    if(res.success) {
+                                success: function (res) {
+                                    if (res.success) {
                                         alert(res.msg)
                                     }
                                 }
@@ -58,7 +75,7 @@
                         } else {
                             console.log('不同意')
                         }
-                    } else if(data.access) {
+                    } else if (data.access) {
                         alert(data.from.name)
                     }
 
@@ -66,33 +83,48 @@
 
                 onclose: function () {
                     console.log('websocket closed');
-                },
-
-                userid
-            })
+                }
+            });
 
             request({
                 url: '/api/friendList',
                 method: 'GET',
                 success: function (res) {
                     if (res.success) {
-                        var list = res.data.rows;
+                        var list = res.data;
                         var len = list.length;
                         if (len > 0) {
                             var html = '<ul>';
                             for (let i = 0; i < len; i++) {
-                                html += '<li class="item" data-id="' + list[i].userid + '">' + list[i].name + '<span class="delete">删除</span></li>';
+                                html += '<li class="item" data-id="' + list[i].userid + '">' + list[i].name + '<span class="talk">聊天</span><span class="delete">删除</span></li>';
                             }
                             html += '</ul>';
 
                             document.querySelector('.list').innerHTML = html;
                         }
-                    } 
+                    }
                 }
             });
 
             document.addEventListener('click', function (e) {
-                console.log(e.target)
+                var dom = e.target.parentNode;
+                if (dom.className === 'item') {
+                    var id = dom.getAttribute('data-id');
+                    if (e.target.className === 'talk') {
+                        window.location.href = './index.html?id=' + id;
+                    } else if (e.target.className === 'delete') {
+                        request({
+                            url: '/api/deleteFriend',
+                            method: 'POST',
+                            body: {
+                                id
+                            },
+                            success: function(res) {
+                                if(res.success) alert('删除成功')
+                            }
+                        })
+                    }
+                }
             })
         })()
         // webSocket.onclose = onclose;

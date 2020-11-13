@@ -5,11 +5,13 @@ function createWebsocket(url) {
     return false;
 }
 
-function linkWebsocket({ onmessage, onclose, userid }) {
-    const webSocket = createWebsocket("ws://localhost:3000/" + userid);
+function linkWebsocket(param, { onmessage, onclose }) {
+    const webSocket = createWebsocket("ws://localhost:3000/" + param);
 
     webSocket.onmessage = onmessage;
 
     webSocket.onclose = onclose;
+
+    return webSocket;
 }
 

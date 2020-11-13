@@ -5,17 +5,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="./index.css">
+    <script src="./js/util.js"></script>
     <script src="./js/linksocket.js"></script>
     <title>sendMessage</title>
+
+    <style>
+        .sending {
+            color: #f25618;
+        }
+
+        .finished {
+            color: #f2e318;
+        }
+
+        .recive {
+            color: blue;
+        }
+    </style>
 </head>
 
 <body>
     <div class="container">
-        <p class="friend"></p>
-        <div>
-            <input type="text" class="id">
-            <button onclick="onClick()">点击</button>
-        </div>
         <div class="sendmessage">
             <input type="text" class="message">
             <button class="btn">发送</button>
@@ -26,60 +36,77 @@
 
 
     <script>
+        var userid = getCookie('userid');
+
+        const webSocket = linkWebsocket(userid, {
+            onmessage: function (message) {
+                var data = JSON.parse(message.data);
+                if (data.content) createNode(data);
+                console.log(data)
+                if (data.sended) {
+                    const dom = document.querySelector('.mysend' + data.mysend);
+                    dom.className = 'finished message';
+
+                    var parentN = dom.parentNode;
+                    var childN = parentN.querySelectorAll('span')[1];
+                    parentN.removeChild(childN);
+                }
+            },
+
+            onclose: function () {
+                console.log('websocket closed');
+            }
+        });
+
         let id;
-        function onClick() {
-            id = document.getElementsByClassName('id')[0].value;
+
+        window.onload = function () {
+            var search = window.location.search;
+            id = search.substr(4);
         }
 
         function createNode(data, status) {
             const node = document.createElement('div');
-            node.innerHTML = '<span>' + data.from + '：' + data.content + '</span>';
+            let className = status ? status === 1 ? 'sending' : 'finish' : '';
+
             if (status) {
+               
+                node.innerHTML = '<span class="sending message mysend' + mysend + '">' + data.content + '</span>';
+
                 const span = document.createElement('span');
-                span.classList.add('mysend' + mysend);
-                span.classList.add('mysend');
-                span.innerHTML = status;
+                // span.classList.add('mysend' + mysend);
+                // span.classList.add('mysend');
+                span.innerHTML = '发送中';
                 node.appendChild(span);
                 mysend++;
+            } else {
+                node.innerHTML = '<span class="recive">' + data.content + '</span>';
             }
+           
+
             document.getElementsByClassName('text')[0].appendChild(node);
         }
-
-        // linkWebsocket({
-        //     onmessage: function (message) {
-        //         console.log('服务端：' + message.data);
-        //         let msg = JSON.parse(message.data);
-
-        //         if (!msg.from) return;
-        //         if (msg.from === id) {
-        //             document.getElementsByClassName(msg.id)[0].innerHTML = '已发送';
-        //             return;
-        //         }
-        //         createNode(msg);
-        //     },
-
-        //     onclose: function () {
-        //         console.log('关闭连接');
-        //     }
-        // });
 
         const dom = document.getElementsByClassName('btn')[0];
         let mysend = 0;
         dom.addEventListener('click', () => {
             const mes = document.getElementsByClassName('message')[0];
             const value = {
-                from: id,
-                id: 'mysend' + mysend,
-                content: mes.value
+                to: id,
+                content: mes.value,
+                mysend
             }
-            createNode(value, '发送中');
+            createNode(value, 1);
             webSocket.send(JSON.stringify(value));
             mes.value = '';
-        })
+        });
 
-        document.getElementsByClassName('close')[0].addEventListener('click', () => {
-            webSocket.close();
-        })
+
+
+
+        // document.getElementsByClassName('close')[0].addEventListener('click', () => {
+        //     webSocket.close();
+        // })
     </script>
 </body>
 
